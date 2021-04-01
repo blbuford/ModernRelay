@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from http import HTTPStatus
+
 
 from msgraph_async import GraphAdminClient
 
@@ -29,7 +29,6 @@ class GraphDeliveryAgent(DeliveryAgentABC):
         resp = await self.graph.send_mail(
             message,
             headers=headers,
-            attachments=attachments,
-            expected_statuses=(HTTPStatus.ACCEPTED,))
+            attachments=attachments)
 
         return resp
