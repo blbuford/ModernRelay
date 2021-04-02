@@ -6,6 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 from aiosmtpd.controller import Controller
 from dotenv import load_dotenv
+import confuse
 
 import agents
 from relay import ModernRelay
@@ -27,9 +28,9 @@ def get_file_handler():
     return file_handler
 
 
-def get_logger(logger_name):
+def get_logger(logger_name, level=logging.DEBUG):
     logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(level)
     logger.addHandler(get_console_handler())
     logger.addHandler(get_file_handler())
     logger.propagate = False
@@ -51,7 +52,10 @@ async def main(config):
 if __name__ == "__main__":
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(BASEDIR, 'dev.env'))
-    get_logger("ModernRelay.log")
+    config = confuse.Configuration("ModernRelay", __name__)
+    logLevel = config['logLevel'].get()
+    get_logger("ModernRelay.log", getattr(logging, logLevel))
+
     loop = asyncio.get_event_loop()
     loop.create_task(main({}))
     try:
