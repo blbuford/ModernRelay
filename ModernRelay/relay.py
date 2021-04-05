@@ -1,11 +1,12 @@
 import logging
-import agents
 from email import message_from_bytes
 from email import policy
 
+import agents
+
 
 class ModernRelay:
-    def __init__(self, delivery_agent: agents.DeliveryAgentABC):
+    def __init__(self, delivery_agent: agents.DeliveryAgentBase):
         self.agent = delivery_agent
         self.logger = logging.getLogger("ModernRelay.log")
 
@@ -29,7 +30,8 @@ class ModernRelay:
 
         if resp[-1] == 202:
             self.logger.info(f"Message from {session.peer[0]} successfully relayed to {self.agent.__class__.__name__}.")
-            self.logger.debug(f"Peer IP: {session.peer[0]} - From:{envelope.mail_from} - To: {envelope.rcpt_tos}")
+            self.logger.debug(f"Peer IP: {session.peer[0]} - From:{envelope.mail_from} - To: {envelope.rcpt_tos} - "
+                              f"HTTP Response: {resp[-1]}")
             return '250 Message accepted for delivery'
         else:
             self.logger.error(

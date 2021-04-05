@@ -1,20 +1,40 @@
-from abc import ABC, abstractmethod
 import os
+from abc import abstractmethod
 
 from msgraph_async import GraphAdminClient
+
 import exceptions
 
 
-class DeliveryAgentABC(ABC):
+class DeliveryAgentBase:
+    subclasses = {}
+
     def __init__(self):
         super().__init__()
+
+    @classmethod
+    def register_subclass(cls, agent):
+        def decorator(subclass):
+            cls.subclasses[agent] = subclass
+            return subclass
+
+        return decorator
+
+    @classmethod
+    def create(cls, agent, config):
+        if agent not in cls.subclasses:
+            raise exceptions.DeliveryAgentException(f"Agent type {agent} not registered in "
+                                                    f"DeliveryAgentBase.subclasses! Did you decorate your class with "
+                                                    f"@DeliveryAgentBase.register_subclass()?")
+        return cls.subclasses[agent](config)
 
     @abstractmethod
     async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None):
         pass
 
 
-class GraphDeliveryAgent(DeliveryAgentABC):
+@DeliveryAgentBase.register_subclass('GraphDeliveryAgent')
+class GraphDeliveryAgent(DeliveryAgentBase):
     def __init__(self):
         self.graph = GraphAdminClient()
         if not os.getenv('MR_MS365_APP_ID'):
