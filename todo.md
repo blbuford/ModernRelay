@@ -1,13 +1,13 @@
  * Configurable inbound peers
-    * Allow an IP address or subnet
-    * Choose type of auth: 
-      * Anonymous (no pw)
+    * (cidr_address) Allow an IP address or subnet
+    * (authentication) Choose type of auth: 
+      * Anonymous (no pw) (default, if unset)
       * Basic Auth (username/pw validated against sql lite)
       * STRETCH GOAL: Basic Auth against LDAP/KRB (Like active directory)
-    * Choose allowed destinations:
-      * Allow all
+    * (destination) Choose allowed destinations:
+      * Allow all (default, if unset)
       * Domain list
-    * Choose delivery agent:
+    * (agent) Choose delivery agent:
       * MS Graph
       * Basic SMTP:
         * Smart host
@@ -16,5 +16,5 @@
 * Inbound SSL/TLS
 * Delivery Agents:
     * MS Graph
-    * Basic STMP
+    * Basic SMTP
     * Maybe GSuite/Google

@@ -21,12 +21,12 @@ class DeliveryAgentBase:
         return decorator
 
     @classmethod
-    def create(cls, agent, config):
+    def create(cls, agent):
         if agent not in cls.subclasses:
             raise exceptions.DeliveryAgentException(f"Agent type {agent} not registered in "
                                                     f"DeliveryAgentBase.subclasses! Did you decorate your class with "
                                                     f"@DeliveryAgentBase.register_subclass()?")
-        return cls.subclasses[agent](config)
+        return cls.subclasses[agent]()
 
     @abstractmethod
     async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None):
@@ -36,7 +36,7 @@ class DeliveryAgentBase:
 @DeliveryAgentBase.register_subclass('GraphDeliveryAgent')
 class GraphDeliveryAgent(DeliveryAgentBase):
     def __init__(self):
-        self.graph = GraphAdminClient()
+        self.graph = None
         if not os.getenv('MR_MS365_APP_ID'):
             raise exceptions.DeliveryAgentException("Environment variable MR_MS365_APP_ID is not set!")
 
@@ -49,6 +49,8 @@ class GraphDeliveryAgent(DeliveryAgentBase):
         super().__init__()
 
     async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None):
+        if not self.graph:
+            self.graph = GraphAdminClient()
         if not self.graph.is_managed:
             await self.graph.manage_token(os.getenv('MR_MS365_APP_ID'),
                                           os.getenv('MR_MS365_APP_SECRET'),

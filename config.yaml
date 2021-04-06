@@ -1,2 +1,7 @@
 ---
 logLevel: DEBUG
+
+peers:
+  HP MFC 424fdw:
+    cidr_address: 172.16.128.109
+    agent: GraphDeliveryAgent
