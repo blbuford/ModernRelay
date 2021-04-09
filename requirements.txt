@@ -16,3 +16,4 @@ six~=1.15.0
 typing-extensions~=3.7.4.3
 tzlocal~=2.1
 yarl~=1.6.3
+argon2-cffi~=20.1.0

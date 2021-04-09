@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 import agents
 import exceptions
 from relay import ModernRelay
+from auth import Authenticator
+
 
 FORMATTER = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 LOG_FILE = "ModernRelay.log"
@@ -77,14 +79,20 @@ def parse_peers(config):
 async def main(config):
     logger = logging.getLogger("ModernRelay.log")
     try:
-        network_agents_map = {}
-        network_destinations_map = {}
+        peer_map = {}
         for peer in config['peers']:
-            network_agents_map[peer['cidr_address']] = agents.DeliveryAgentBase.create(peer['agent'])
-            network_destinations_map[peer['cidr_address']] = peer['destination']
+            peer_map[peer['cidr_address']] = {
+                'agent': agents.DeliveryAgentBase.create(peer['agent']),
+                'destinations': peer['destination'],
+                'authentication': peer['authentication']
+            }
 
-        handler = ModernRelay(network_agents_map, network_destinations_map)
-        controller = Controller(handler, port=8025, hostname='172.16.128.109')
+        handler = ModernRelay(peer_map)
+        controller = Controller(
+            handler,
+            authenticator=Authenticator('modernrelay.db'),
+            port=8025,
+            hostname='172.16.128.109')
         controller.start()
         logger.info(f"SMTP Controller live on {controller.hostname}:{controller.port}!")
     except exceptions.DeliveryAgentException as e:

@@ -13,6 +13,10 @@
         * Smart host
         * MX record (default)
         * STRETCH GOAL: Do destination cert checking like an Exchange connector would
+      * (tls)
+        * required: yes/no
+        * public key
+        * private key
 * Inbound SSL/TLS
 * Delivery Agents:
     * MS Graph
