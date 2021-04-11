@@ -22,3 +22,4 @@
     * MS Graph
     * Basic SMTP
     * Maybe GSuite/Google
+* https://developer.hpe.com/blog/enabling-python-3-with-opensslfips-on-microsoft-windows
