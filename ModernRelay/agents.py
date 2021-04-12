@@ -1,6 +1,7 @@
+import logging
 import os
 from abc import abstractmethod, ABC
-from typing import Tuple
+from typing import Tuple, Union
 
 from msgraph_async import GraphAdminClient
 from msgraph_async.common import GraphClientException
@@ -10,6 +11,11 @@ from ModernRelay import exceptions
 
 class DeliveryAgentBase(ABC):
     subclasses = {}
+
+    def __init__(self):
+        self.logger = logging.getLogger("ModernRelay.log"
+
+                                        )
 
     @classmethod
     def register_subclass(cls, agent):
@@ -28,13 +34,15 @@ class DeliveryAgentBase(ABC):
         return cls.subclasses[agent]()
 
     @abstractmethod
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> Tuple[str, int]:
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) \
+            -> Union[None, Tuple[str, int]]:
         pass
 
 
 @DeliveryAgentBase.register_subclass('GraphDeliveryAgent')
 class GraphDeliveryAgent(DeliveryAgentBase):
     def __init__(self):
+        super().__init__()
         self.graph = None
         if not os.getenv('MR_MS365_APP_ID'):
             raise exceptions.DeliveryAgentException("Environment variable MR_MS365_APP_ID is not set!")
@@ -45,7 +53,8 @@ class GraphDeliveryAgent(DeliveryAgentBase):
         if not os.getenv('MR_MS365_TENANT_ID'):
             raise exceptions.DeliveryAgentException("Environment variable MR_MS365_TENANT_ID is not set!")
 
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> Tuple[str, int]:
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) \
+            -> Union[None, Tuple[str, int]]:
         if not self.graph:
             self.graph = GraphAdminClient()
 
@@ -62,5 +71,7 @@ class GraphDeliveryAgent(DeliveryAgentBase):
                 headers=headers,
                 attachments=attachments)
         except GraphClientException as ex:
-            pass
+            self.logger.warning(f"Error: sendmail failed. {ex.message}")
+        except Exception as ex:
+            self.logger.warning(f"Error: sendmail failed at authentication. {ex.args[0]}")
         return resp
