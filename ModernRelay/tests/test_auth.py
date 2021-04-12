@@ -57,9 +57,15 @@ class TestAuthenticator(_CommonMethods):
 
         assert resp == S.S235_AUTH_SUCCESS
 
-    def test_plain_auth_fail(self, do_auth_plain):
+    def test_plain_auth_bad_password(self, do_auth_plain):
         password = "totally-wrong"
         resp = do_auth_plain(b64encode(b"\0test\0" + password.encode("ascii")).decode())
+
+        assert resp == S.S535_AUTH_INVALID
+
+    def test_plain_auth_bad_user(self, do_auth_plain):
+        password = "totally-wrong"
+        resp = do_auth_plain(b64encode(b"\0baduser\0" + password.encode("ascii")).decode())
 
         assert resp == S.S535_AUTH_INVALID
 
@@ -69,7 +75,7 @@ class TestAuthenticator(_CommonMethods):
         resp = do_auth_login(b64encode(b"test").decode())
         assert resp == S.S235_AUTH_SUCCESS
 
-    def test_login_auth_fail(self, do_auth_login):
+    def test_login_auth_bad_password(self, do_auth_login):
         resp = do_auth_login(b64encode(b"test").decode())
         assert resp == S.S334_AUTH_PASSWORD
         resp = do_auth_login(b64encode(b"total-wrong").decode())

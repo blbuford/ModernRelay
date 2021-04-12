@@ -1,16 +1,15 @@
 import os
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+from typing import Tuple
 
 from msgraph_async import GraphAdminClient
+from msgraph_async.common import GraphClientException
 
-import exceptions
+from ModernRelay import exceptions
 
 
-class DeliveryAgentBase:
+class DeliveryAgentBase(ABC):
     subclasses = {}
-
-    def __init__(self):
-        super().__init__()
 
     @classmethod
     def register_subclass(cls, agent):
@@ -29,7 +28,7 @@ class DeliveryAgentBase:
         return cls.subclasses[agent]()
 
     @abstractmethod
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None):
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> Tuple[str, int]:
         pass
 
 
@@ -46,20 +45,22 @@ class GraphDeliveryAgent(DeliveryAgentBase):
         if not os.getenv('MR_MS365_TENANT_ID'):
             raise exceptions.DeliveryAgentException("Environment variable MR_MS365_TENANT_ID is not set!")
 
-        super().__init__()
-
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None):
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> Tuple[str, int]:
         if not self.graph:
             self.graph = GraphAdminClient()
-        if not self.graph.is_managed:
-            await self.graph.manage_token(os.getenv('MR_MS365_APP_ID'),
-                                          os.getenv('MR_MS365_APP_SECRET'),
-                                          os.getenv('MR_MS365_TENANT_ID'))
 
-        message['body_type'] = "HTML" if message['body_type'] == "text/html" else "Text"
-        resp = await self.graph.send_mail(
-            message,
-            headers=headers,
-            attachments=attachments)
+        resp = None
+        try:
+            if not self.graph.is_managed:
+                await self.graph.manage_token(os.getenv('MR_MS365_APP_ID'),
+                                              os.getenv('MR_MS365_APP_SECRET'),
+                                              os.getenv('MR_MS365_TENANT_ID'))
 
+            message['body_type'] = "HTML" if message['body_type'] == "text/html" else "Text"
+            resp = await self.graph.send_mail(
+                message,
+                headers=headers,
+                attachments=attachments)
+        except GraphClientException as ex:
+            pass
         return resp

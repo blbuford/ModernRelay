@@ -26,12 +26,9 @@ class Authenticator:
             return fail_nothandled
         if not isinstance(auth_data, LoginPassword):
             return fail_nothandled
-        if server.enable_SMTPUTF8:
-            username = auth_data.login.decode('utf-8')
-            password = auth_data.password.decode('utf-8')
-        else:
-            username = auth_data.login.decode('ascii')
-            password = auth_data.password.decode('ascii')
+        username = auth_data.login.decode('utf-8')
+        password = auth_data.password.decode('utf-8')
+
 
         conn = sqlite3.connect(self.auth_db)
         curs = conn.execute(
