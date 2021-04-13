@@ -15,12 +15,12 @@ class Authenticator:
         self.logger = logging.getLogger("ModernRelay.log")
 
     def __call__(self,
-        server: SMTP,
-        session: Session,
-        envelope: Envelope,
-        mechanism: str,
-        auth_data: Tuple[bytes, bytes],
-    ) -> AuthResult:
+                 server: SMTP,
+                 session: Session,
+                 envelope: Envelope,
+                 mechanism: str,
+                 auth_data: Tuple[bytes, bytes],
+                 ) -> AuthResult:
         fail_nothandled = AuthResult(success=False, handled=False)
         if mechanism not in ("LOGIN", "PLAIN"):
             return fail_nothandled
@@ -28,7 +28,6 @@ class Authenticator:
             return fail_nothandled
         username = auth_data.login.decode('utf-8')
         password = auth_data.password.decode('utf-8')
-
 
         conn = sqlite3.connect(self.auth_db)
         curs = conn.execute(
@@ -42,8 +41,7 @@ class Authenticator:
             if self.ph.verify(hash_db[0], password):
                 self.logger.info(f"User {username} authenticated")
                 return AuthResult(success=True)
-        except VerifyMismatchError as e:
+        except VerifyMismatchError:
             self.logger.warning(f"User {username} failed authentication!")
 
         return fail_nothandled
-

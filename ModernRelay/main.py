@@ -11,9 +11,8 @@ from dotenv import load_dotenv
 
 import agents
 import exceptions
-from relay import ModernRelay
 from auth import Authenticator
-
+from relay import ModernRelay
 
 FORMATTER = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 LOG_FILE = "ModernRelay.log"
@@ -50,25 +49,25 @@ def parse_peers(config):
             else:
                 detail['cidr_address'] = ipaddress.ip_network(peer_details['cidr_address'] + "/32")
         else:
-            raise Exception(f"Error parsing configuration! cidr_address is a required field in the config")
+            raise Exception("Error parsing configuration! cidr_address is a required field in the config")
 
         if 'agent' in peer_details:
             detail['agent'] = peer_details['agent']
         else:
-            raise Exception(f"Error parsing configuration! agent is a required field in the config")
+            raise Exception("Error parsing configuration! agent is a required field in the config")
 
         if 'authentication' in peer_details:
             if peer_details['authentication'] == "anonymous":
                 detail['authentication'] = peer_details['authentication']
             else:
-                raise NotImplementedError(f"Authentication not implemented yet, please remove it from the config to "
-                                          f"default to anonymous")
+                raise NotImplementedError("Authentication not implemented yet, please remove it from the config to "
+                                          "default to anonymous")
         else:
             detail['authentication'] = "anonymous"
 
         if 'destination' in peer_details:
-            raise NotImplementedError(f"Destination limits not implemented yet, please remove it from the config to "
-                                      f"default to all")
+            raise NotImplementedError("Destination limits not implemented yet, please remove it from the config to "
+                                      "default to all")
         else:
             detail['destination'] = "all"
 
@@ -95,8 +94,8 @@ async def main(config):
             hostname='172.16.128.109')
         controller.start()
         logger.info(f"SMTP Controller live on {controller.hostname}:{controller.port}!")
-    except exceptions.DeliveryAgentException as e:
-        logger.exception(f"Failed to create delivery agent!")
+    except exceptions.DeliveryAgentException:
+        logger.exception("Failed to create delivery agent!")
 
 
 if __name__ == "__main__":

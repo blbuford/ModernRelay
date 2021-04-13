@@ -60,8 +60,9 @@ class ModernRelay:
     async def handle_DATA(self, server, session, envelope):
         if not hasattr(session, 'mr_agent'):
             self.logger.error(
-                f"500 Message from {session.peer[0]} failed to relay because it could not be matched to a delivery agent")
-            return f"500 Failed to match session with delivery agent"
+                f"500 Message from {session.peer[0]} failed to relay because it could not be matched to a delivery "
+                f"agent")
+            return "500 Failed to match session with delivery agent"
 
         em = message_from_bytes(envelope.original_content, policy=policy.default)
 
@@ -88,5 +89,6 @@ class ModernRelay:
             return '250 Message accepted for delivery'
         else:
             self.logger.error(
-                f"500 Message from {addr} failed to relay to {session.mr_agent.__class__.__name__} with status code {resp[-1]}")
+                f"500 Message from {addr} failed to relay to {session.mr_agent.__class__.__name__} "
+                f"with status code {resp[-1]}")
             return f'500 Delivery agent failed with status code {resp[-1]}'
