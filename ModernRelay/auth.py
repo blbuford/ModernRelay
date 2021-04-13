@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP, Session, Envelope
 from argon2 import PasswordHasher
@@ -9,8 +9,11 @@ from argon2.exceptions import VerifyMismatchError
 
 
 class Authenticator:
-    def __init__(self, auth_database):
-        self.auth_db = Path(auth_database)
+    def __init__(self, auth_database: Union[str, Path]):
+        if isinstance(auth_database, str):
+            self.auth_db = Path(auth_database)
+        elif isinstance(auth_database, Path):
+            self.auth_db = auth_database
         self.ph = PasswordHasher()
         self.logger = logging.getLogger("ModernRelay.log")
 
@@ -29,7 +32,7 @@ class Authenticator:
         username = auth_data.login.decode('utf-8')
         password = auth_data.password.decode('utf-8')
 
-        conn = sqlite3.connect(self.auth_db)
+        conn = sqlite3.connect(str(self.auth_db))
         curs = conn.execute(
             "SELECT hashpass FROM userauth WHERE username=?", (username,)
         )

@@ -158,7 +158,7 @@ def modern_relay_controller(
         decode_data=True,
         enable_SMTPUTF8=True,
         auth_require_tls=False,
-        authenticator=Authenticator(Path(__file__).parent / "test.db~"),
+        authenticator=Authenticator(str(Path(__file__).parent / "test.db~")),
     )
     controller.start()
     Global.set_addr_from(controller)

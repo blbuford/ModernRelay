@@ -1,5 +1,4 @@
 import asyncio
-from dataclasses import dataclass
 from typing import Union, Tuple
 
 import pytest
@@ -34,7 +33,6 @@ class TestDeliveryAgentBase:
     async def test_abstract_send_mail(self):
         DeliveryAgentBase.__abstractmethods__ = set()
 
-        @dataclass
         class Dummy(DeliveryAgentBase):
             pass
 
