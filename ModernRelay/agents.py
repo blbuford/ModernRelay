@@ -13,9 +13,7 @@ class DeliveryAgentBase(ABC):
     subclasses = {}
 
     def __init__(self):
-        self.logger = logging.getLogger("ModernRelay.log"
-
-                                        )
+        self.logger = logging.getLogger("ModernRelay.log")
 
     @classmethod
     def register_subclass(cls, agent):

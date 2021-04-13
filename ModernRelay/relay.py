@@ -27,7 +27,7 @@ class ModernRelay:
                     self.logger.warning(f"530 MAIL FROM {address} ({session.peer[0]}) denied! Authentication Required")
                     return "530 5.7.0 Authentication required"
 
-        if not session.mr_agent:
+        if not hasattr(session, 'mr_agent'):
             self.logger.warning(
                 f"530 MAIL FROM {address} ({session.peer[0]}) denied! IP address not found in allowed peers")
             return "550 Mail from this IP address is refused"
@@ -43,20 +43,22 @@ class ModernRelay:
         if type(session.mr_destinations) is str:
             if session.mr_destinations == "all":
                 envelope.rcpt_tos.append(address)
+                envelope.rcpt_options.extend(rcpt_options)
             else:
-                self.logger.error(f"550 {session.mr_destinations} is a string, but its not 'all'.")
+                self.logger.error(f"550 {session.mr_destinations} is a string, but its not 'all'. Typo?")
                 return '550 Error with allowed destinations'
         elif type(session.mr_destinations) is list:
-            domain = address.split("@")[-1]
+            domain = address.split("@")[-1].lower()
             if domain in session.mr_destinations:
                 envelope.rcpt_tos.append(address)
+                envelope.rcpt_options.extend(rcpt_options)
             else:
                 self.logger.error(f"550 {domain} is not in {session.mr_destinations}.")
                 return '550 Domain is not allowed to be relayed'
         return '250 OK'
 
     async def handle_DATA(self, server, session, envelope):
-        if not session.mr_agent:
+        if not hasattr(session, 'mr_agent'):
             self.logger.error(
                 f"500 Message from {session.peer[0]} failed to relay because it could not be matched to a delivery agent")
             return f"500 Failed to match session with delivery agent"
