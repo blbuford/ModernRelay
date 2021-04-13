@@ -9,9 +9,8 @@ from typing import Callable, Generator, Any, NamedTuple, Optional, Type
 import pytest
 from aiosmtpd.controller import Controller
 from aiosmtpd.handlers import Sink
-
+from pathlib import Path
 from ModernRelay.auth import Authenticator
-
 
 __all__ = [
     "controller_data",
@@ -19,9 +18,9 @@ __all__ = [
     "Global"
 ]
 
-
 controller_data = pytest.mark.controller_data
 handler_data = pytest.mark.handler_data
+
 
 class HostPort(NamedTuple):
     host: str = "localhost"
@@ -159,7 +158,7 @@ def modern_relay_controller(
         decode_data=True,
         enable_SMTPUTF8=True,
         auth_require_tls=False,
-        authenticator=Authenticator("test.db~"),
+        authenticator=Authenticator(Path(__file__).parent / "test.db~"),
     )
     controller.start()
     Global.set_addr_from(controller)

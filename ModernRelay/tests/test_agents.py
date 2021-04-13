@@ -28,7 +28,7 @@ class TestDeliveryAgentBase:
 
     def test_create_subclass_fail(self):
         with pytest.raises(DeliveryAgentException, match=".*not registered.*"):
-            cls = DeliveryAgentBase.create('doesnt-exist')
+            DeliveryAgentBase.create('doesnt-exist')
 
     @pytest.mark.asyncio
     async def test_abstract_send_mail(self):

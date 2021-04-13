@@ -4,7 +4,7 @@ import ipaddress
 import pytest
 from aiosmtpd.smtp import Session, Envelope
 from asynctest import MagicMock
-
+from pathlib import Path
 import ModernRelay.relay
 from ModernRelay.agents import DeliveryAgentBase
 
@@ -32,7 +32,7 @@ class TestRelay:
 
     @pytest.fixture
     def envelope_attachment(self, envelope):
-        with open('test_email', 'rb') as email:
+        with open(Path(__file__).parent / 'test_email', 'rb') as email:
             envelope.original_content = email.read()
         return envelope
 
