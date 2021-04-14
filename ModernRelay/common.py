@@ -2,6 +2,7 @@ import ipaddress
 import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
 
 from ModernRelay.exceptions import ConfigParsingException
 
@@ -66,14 +67,14 @@ def parse_config(config):
         else:
             peers[peer_name]['destinations'] = "all"
 
+    server_conf['tls'] = {}
+    server_conf['networking'] = {}
     if 'tls' in config:
-        server_conf['tls'] = {}
         server_conf['tls']['required'] = config['tls']['required'].get(bool)
-        server_conf['tls']['public_key'] = config['tls']['public_key'].get(str)
-        server_conf['tls']['private_key'] = config['tls']['private_key'].get(str)
+        server_conf['tls']['public_key'] = Path(config['tls']['public_key'].get(str)).absolute()
+        server_conf['tls']['private_key'] = Path(config['tls']['private_key'].get(str)).absolute()
 
     if 'networking' in config:
-        server_conf['networking'] = {}
         server_conf['networking']['port'] = config['networking']['port'].get(int)
         server_conf['networking']['host_name'] = config['networking']['host_name'].get(str)
 

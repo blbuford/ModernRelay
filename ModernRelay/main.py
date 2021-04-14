@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import ssl
 
 import confuse
 from aiosmtpd.controller import Controller
@@ -19,14 +20,27 @@ async def main(config, peers):
         for addr in peers:
             peers[addr]['agent'] = agents.DeliveryAgentBase.create(peers[addr]['agent'])
 
+        tls_context = None
+        tls_required = False
+
+        if 'public_key' in config['tls'] and 'private_key' in config['tls']:
+            tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            tls_context.load_cert_chain(config['tls']['public_key'], config['tls']['private_key'])
+
+        if 'required' in config['tls']:
+            tls_required = config['tls']['required']
+
         handler = ModernRelay(peers)
         controller = Controller(
             handler,
             authenticator=Authenticator('modernrelay.db'),
             port=8025,
-            hostname='172.16.128.109')
+            hostname='172.16.128.109',
+            require_starttls=tls_required,
+            tls_context=tls_context)
         controller.start()
-        logger.info(f"SMTP Controller live on {controller.hostname}:{controller.port}!")
+        logger.info(f"SMTP Controller live on {controller.hostname}:{controller.port}! "
+                    f"Require_STARTTLS: {tls_required}")
     except exceptions.DeliveryAgentException:
         logger.exception("Failed to create delivery agent!")
 
