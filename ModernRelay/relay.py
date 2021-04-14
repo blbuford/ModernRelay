@@ -18,8 +18,8 @@ class ModernRelay:
         addr = ipaddress.ip_address(session.peer[0])
         for peer in self.peer_map:
             if addr in peer:
-                if (self.peer_map[peer]['authentication'] == "anonymous" and not session.authenticated) or (
-                        self.peer_map[peer]['authentication'] in ('LOGIN', 'PLAIN') and session.authenticated):
+                if (not self.peer_map[peer]['authenticated'] and not session.authenticated) or (
+                        self.peer_map[peer]['authenticated'] and session.authenticated):
                     session.mr_agent = self.peer_map[peer]['agent']
                     session.mr_destinations = self.peer_map[peer]['destinations']
                     break

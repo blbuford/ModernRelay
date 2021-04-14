@@ -1,7 +1,26 @@
 ---
-logLevel: DEBUG
+logging:
+  log_level: DEBUG
+  log_file_name: ModernRelay.log
+
+tls:
+  required: False
+  public_key: certs/cert.pem
+  private_key: certs/key.pem
+
+networking:
+  port: 8025
+  host_name: 172.16.128.109
 
 peers:
-  HP MFC 424fdw:
-    cidr_address: 172.16.128.109
+  172.16.128.109/32:
     agent: GraphDeliveryAgent
+    destinations: all
+    authenticated: no
+
+  172.16.128.119/32:
+    agent: GraphDeliveryAgent
+    destinations:
+      - google.com
+      - example.com
+    authenticated: no

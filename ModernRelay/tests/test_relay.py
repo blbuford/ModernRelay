@@ -55,12 +55,12 @@ class TestRelay:
     def relay(self, mocked_agent):
         peer_map = {
             ipaddress.ip_network('172.16.128.0/24'): {
-                'authentication': 'anonymous',
+                'authenticated': False,
                 'agent': mocked_agent(),
                 'destinations': 'all'
             },
             ipaddress.ip_network('172.16.129.0/24'): {
-                'authentication': 'LOGIN',
+                'authenticated': True,
                 'agent': mocked_agent(),
                 'destinations': ['example.com', 'google.com']
             }
