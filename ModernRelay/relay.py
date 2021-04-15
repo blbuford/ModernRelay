@@ -2,12 +2,16 @@ import ipaddress
 import logging
 from email import message_from_bytes
 from email import policy
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 class ModernRelay:
     def __init__(self, peer_map):
         self.peer_map = peer_map
         self.logger = logging.getLogger("ModernRelay.log")
+        self.scheduler = AsyncIOScheduler({
+            'apscheduler.job_defaults.coalesce': 'true'
+        })
 
     async def handle_EHLO(self, server, session, envelope, hostname, responses):
         session.host_name = hostname
@@ -72,7 +76,7 @@ class ModernRelay:
             'contentBytes': i.get_payload(decode=False).replace('\r\n', '')
         } for i in em.iter_attachments()]
 
-        resp = await session.mr_agent.send_mail(
+        result = await session.mr_agent.send_mail(
             {
                 'from': envelope.mail_from,
                 'to': envelope.rcpt_tos,
@@ -82,13 +86,11 @@ class ModernRelay:
             }, headers=None, attachments=attachments)
 
         addr = session.peer[0]
-        if resp[-1] == 202:
+        if result:
             self.logger.info(f"250 Message from {addr} successfully relayed to {session.mr_agent.__class__.__name__}.")
-            self.logger.debug(f"Peer IP: {addr} - From:{envelope.mail_from} - To: {envelope.rcpt_tos} - "
-                              f"HTTP Response: {resp[-1]}")
+            self.logger.debug(f"Peer IP: {addr} - From:{envelope.mail_from} - To: {envelope.rcpt_tos}")
             return '250 Message accepted for delivery'
         else:
             self.logger.error(
-                f"500 Message from {addr} failed to relay to {session.mr_agent.__class__.__name__} "
-                f"with status code {resp[-1]}")
-            return f'500 Delivery agent failed with status code {resp[-1]}'
+                f"500 Message from {addr} failed to relay to {session.mr_agent.__class__.__name__}")
+            return '500 Delivery agent failed'

@@ -97,7 +97,7 @@ class TestGraphDeliveryAgent:
             'body_type': 'text/html',
             'body_content': 'test'
         })
-        assert response[-1] == 202
+        assert response
         assert 'Error: sendmail failed.' not in caplog.text
 
     @pytest.mark.asyncio

@@ -1,7 +1,6 @@
 import logging
 import os
 from abc import abstractmethod, ABC
-from typing import Tuple, Union
 
 from msgraph_async import GraphAdminClient
 from msgraph_async.common import GraphClientException
@@ -32,8 +31,7 @@ class DeliveryAgentBase(ABC):
         return cls.subclasses[agent]()
 
     @abstractmethod
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) \
-            -> Union[None, Tuple[str, int]]:
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> bool:
         pass
 
 
@@ -51,12 +49,11 @@ class GraphDeliveryAgent(DeliveryAgentBase):
         if not os.getenv('MR_MS365_TENANT_ID'):
             raise exceptions.DeliveryAgentException("Environment variable MR_MS365_TENANT_ID is not set!")
 
-    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) \
-            -> Union[None, Tuple[str, int]]:
+    async def send_mail(self, message: dict, headers: dict = None, attachments: dict = None) -> bool:
         if not self.graph:
             self.graph = GraphAdminClient()
 
-        resp = None
+        ret = False
         try:
             if not self.graph.is_managed:
                 await self.graph.manage_token(os.getenv('MR_MS365_APP_ID'),
@@ -68,8 +65,10 @@ class GraphDeliveryAgent(DeliveryAgentBase):
                 message,
                 headers=headers,
                 attachments=attachments)
+            ret = 200 <= resp[-1] < 300
+            self.logger.debug(f"GraphDeliveryAgent:send_mail: HTTP Response: {resp[-1]}, HTTP Status:{resp[0]}")
         except GraphClientException as ex:
             self.logger.warning(f"Error: sendmail failed. {ex.message}")
         except Exception as ex:
             self.logger.warning(f"Error: sendmail failed at authentication. {ex.args[0]}")
-        return resp
+        return ret

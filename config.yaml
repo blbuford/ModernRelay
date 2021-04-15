@@ -4,7 +4,7 @@ logging:
   log_file_name: ModernRelay.log
 
 tls:
-  required: False
+  required: yes
   public_key: certs/cert.pem
   private_key: certs/key.pem
 

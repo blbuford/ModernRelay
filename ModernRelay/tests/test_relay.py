@@ -38,7 +38,7 @@ class TestRelay:
 
     @pytest.fixture
     def mocked_agent(self):
-        def inner(ret=("ACCEPTED", 202)):
+        def inner(ret=True):
             DeliveryAgentBase.__abstractmethods__ = set()
 
             class DummyDeliveryAgent(DeliveryAgentBase):
@@ -175,8 +175,8 @@ class TestRelay:
 
     @pytest.mark.asyncio
     async def test_data_with_attachment_failure(self, relay, session_anon, envelope_attachment, mocked_agent):
-        session_anon.mr_agent = mocked_agent(("REJECTED", 500))
+        session_anon.mr_agent = mocked_agent(False)
 
         result = await relay.handle_DATA(None, session_anon, envelope_attachment)
 
-        assert result == "500 Delivery agent failed with status code 500"
+        assert result == "500 Delivery agent failed"
