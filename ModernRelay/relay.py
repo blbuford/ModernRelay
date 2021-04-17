@@ -1,17 +1,24 @@
 import ipaddress
 import logging
-from email import message_from_bytes
-from email import policy
+from datetime import timedelta, datetime
+from email import message_from_bytes, policy
+from pathlib import Path
+
+from aiosmtpd.smtp import Envelope
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from ModernRelay import common
+from ModernRelay.agents import DeliveryAgentBase
 
 
 class ModernRelay:
-    def __init__(self, peer_map):
+    def __init__(self, peer_map, file_manager=None):
         self.peer_map = peer_map
         self.logger = logging.getLogger("ModernRelay.log")
-        self.scheduler = AsyncIOScheduler({
-            'apscheduler.job_defaults.coalesce': 'true'
-        })
+        self.scheduler = AsyncIOScheduler()
+        self.file_manager = file_manager
+        self.job_map = {}
+        # TODO: Import jobs back into being
 
     async def handle_EHLO(self, server, session, envelope, hostname, responses):
         session.host_name = hostname
@@ -68,22 +75,9 @@ class ModernRelay:
                 f"agent")
             return "500 Failed to match session with delivery agent"
 
-        em = message_from_bytes(envelope.original_content, policy=policy.default)
+        message, attachments = get_message_and_attachments(envelope)
 
-        attachments = [{
-            'name': i.get_filename(),
-            'contentType': i.get_content_type(),
-            'contentBytes': i.get_payload(decode=False).replace('\r\n', '')
-        } for i in em.iter_attachments()]
-
-        result = await session.mr_agent.send_mail(
-            {
-                'from': envelope.mail_from,
-                'to': envelope.rcpt_tos,
-                'subject': em['subject'],
-                'body_type': em.get_body().get_content_type(),
-                'body_content': em.get_body().get_content()
-            }, headers=None, attachments=attachments)
+        result = await session.mr_agent.send_mail(message, headers=None, attachments=attachments)
 
         addr = session.peer[0]
         if result:
@@ -93,4 +87,56 @@ class ModernRelay:
         else:
             self.logger.error(
                 f"500 Message from {addr} failed to relay to {session.mr_agent.__class__.__name__}")
+            if self.file_manager:
+                file_path = self.file_manager.save_email(envelope)
+                if file_path:
+                    job = self.scheduler.add_job(func=common.send_mail_from_disk,
+                                                 trigger='interval',
+                                                 minutes=5,
+                                                 args=[file_path, self, session.mr_agent],
+                                                 misfire_grace_time=None,
+                                                 coalesce=True,
+                                                 next_run_time=datetime.now() + timedelta(minutes=5))
+                    self.logger.debug(f"Message from {addr} saved to {file_path}. "
+                                      f"Job is scheduled to try again in 5 minutes")
+                    self.job_map[file_path.name] = job
+                else:
+                    self.logger.critical("Unable to save email to disk!")
+
             return '500 Delivery agent failed'
+
+
+def get_message_and_attachments(envelope: Envelope):
+    em = message_from_bytes(envelope.original_content, policy=policy.default)
+
+    message = {
+        'from': envelope.mail_from,
+        'to': envelope.rcpt_tos,
+        'subject': em['subject'],
+        'body_type': em.get_body().get_content_type(),
+        'body_content': em.get_body().get_content()
+    }
+    attachments = [{
+        'name': i.get_filename(),
+        'contentType': i.get_content_type(),
+        'contentBytes': i.get_payload(decode=False).replace('\r\n', '')
+    } for i in em.iter_attachments()]
+
+    return message, attachments
+
+
+async def send_mail_from_disk(file_path: Path, handler: ModernRelay, delivery_agent: DeliveryAgentBase) -> bool:
+    logger = logging.getLogger("ModernRelay.log")
+    envelope = await handler.file_manager.open_file(file_path)
+    message, attachments = get_message_and_attachments(envelope)
+
+    result = await delivery_agent.send_mail(message, headers=None, attachments=attachments)
+
+    if result:
+        logger.info("Successful!")
+        handler.scheduler.remove_job(handler.job_map[file_path.name])
+        handler.job_map.pop(file_path.name)
+        file_path.unlink()
+    else:
+        logger.warning(f"{file_path} failed to send with agent {delivery_agent.__class__.__name__}")
+    return False
