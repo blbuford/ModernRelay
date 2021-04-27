@@ -25,3 +25,4 @@ pytest-sugar~=0.9.4
 python-dotenv~=0.17.0
 asynctest~=0.13.0
 coverage~=5.5
+aiofiles~=0.6.0

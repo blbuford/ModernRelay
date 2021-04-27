@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import agents
 import exceptions
 from ModernRelay.common import get_logger, parse_config
+from ModernRelay.file_manager import FileManager
 from auth import Authenticator
 from relay import ModernRelay
 
@@ -30,7 +31,7 @@ async def main(config, peers):
         if 'required' in config['tls']:
             tls_required = config['tls']['required']
 
-        handler = ModernRelay(peers)
+        handler = ModernRelay(peers, FileManager(False))
         controller = Controller(
             handler,
             authenticator=Authenticator('modernrelay.db'),

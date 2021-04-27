@@ -1,4 +1,7 @@
+import builtins
 import inspect
+import io
+import os
 import socket
 from contextlib import suppress
 from smtplib import (
@@ -11,6 +14,7 @@ from aiosmtpd.controller import Controller
 from aiosmtpd.handlers import Sink
 from pathlib import Path
 from ModernRelay.auth import Authenticator
+import aiofiles
 
 __all__ = [
     "controller_data",
@@ -170,3 +174,28 @@ def modern_relay_controller(
     # because Controller doesn't like .stop() to be invoked more than once
     with suppress(AssertionError):
         controller.stop()
+
+
+def patch_open(open_func, files):
+    def open_patched(path, mode='r', buffering=-1, encoding=None,
+                     errors=None, newline=None, closefd=True,
+                     opener=None):
+        if 'w' in mode and not os.path.isfile(path):
+            files.append(path)
+        return open_func(path, mode=mode, buffering=buffering,
+                         encoding=encoding, errors=errors,
+                         newline=newline, closefd=closefd,
+                         opener=opener)
+
+    return open_patched
+
+
+@pytest.fixture
+def cleanup_files(monkeypatch):
+    files = []
+    monkeypatch.setattr(builtins, 'open', patch_open(builtins.open, files))
+    monkeypatch.setattr(io, 'open', patch_open(io.open, files))
+    monkeypatch.setattr(aiofiles, 'open', patch_open(aiofiles.open, files))
+    yield
+    for file in files:
+        os.remove(file)
