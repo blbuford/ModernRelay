@@ -26,17 +26,6 @@ class TestRelay:
         return sess
 
     @pytest.fixture
-    def envelope(self):
-        env = Envelope()
-        return env
-
-    @pytest.fixture
-    def envelope_attachment(self, envelope):
-        with open(Path(__file__).parent / 'test_email', 'rb') as email:
-            envelope.original_content = email.read()
-        return envelope
-
-    @pytest.fixture
     def mocked_agent(self):
         def inner(ret=True):
             DeliveryAgentBase.__abstractmethods__ = set()

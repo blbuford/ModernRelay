@@ -13,6 +13,9 @@ import pytest
 from aiosmtpd.controller import Controller
 from aiosmtpd.handlers import Sink
 from pathlib import Path
+
+from aiosmtpd.smtp import Envelope
+
 from ModernRelay.auth import Authenticator
 import aiofiles
 
@@ -21,6 +24,8 @@ __all__ = [
     "handler_data",
     "Global"
 ]
+
+from ModernRelay.file_manager import FileManager
 
 controller_data = pytest.mark.controller_data
 handler_data = pytest.mark.handler_data
@@ -199,3 +204,35 @@ def cleanup_files(monkeypatch):
     yield
     for file in files:
         os.remove(file)
+
+
+@pytest.fixture
+def envelope():
+    env = Envelope()
+    return env
+
+
+@pytest.fixture
+def envelope_attachment(envelope):
+    with open(Path(__file__).parent / 'test_email', 'rb') as email:
+        envelope.original_content = email.read()
+    return envelope
+
+
+@pytest.fixture
+def file_manager():
+    def inner(encrypted):
+        return FileManager(encrypted)
+
+    return inner
+
+
+@pytest.fixture
+def spooled_file():
+    return Path(__file__).parent / "0996e1eb-0591-4d3f-aa26-676ebb097b90"
+
+
+@pytest.fixture
+async def envelope_peer_spooled(file_manager, spooled_file):
+    fm = file_manager(encrypted=False)
+    return await fm.open_file(spooled_file)

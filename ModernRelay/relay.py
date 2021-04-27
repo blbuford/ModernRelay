@@ -1,3 +1,4 @@
+import asyncio
 import ipaddress
 import logging
 from datetime import timedelta, datetime
@@ -127,8 +128,6 @@ def parse_peer(session, peer_map):
 def get_message_and_attachments(envelope: Envelope):
     em = message_from_bytes(envelope.original_content, policy=policy.default)
 
-    print(em['To'])
-    print(em['From'])
     message = {
         'from': envelope.mail_from,
         'to': envelope.rcpt_tos,
@@ -154,7 +153,8 @@ async def send_mail_from_disk(file_path: Path, file_manager: FileManager, schedu
     result = await session.mr_agent.send_mail(message, headers=None, attachments=attachments)
 
     if result:
-        logger.info("Successful!")
+        logger.info(
+            f"Success! {file_path} sent with agent {session.mr_agent.__class__.__name__} to {envelope.rcpt_tos}")
         scheduler.remove_job(file_path.name)
         file_path.unlink()
     else:
@@ -166,7 +166,7 @@ async def load_old_jobs(file_manager, peer_map, scheduler):
     logger = logging.getLogger("ModernRelay.log")
     for job_file in file_manager.get_files():
         envelope, peer = await file_manager.open_file(job_file)
-        session = Session()
+        session = Session(loop=asyncio.get_event_loop())
         session.authenticated = True
         session.peer = (peer,)
         try:

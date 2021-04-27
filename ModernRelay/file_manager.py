@@ -48,5 +48,5 @@ class FileManager:
         encoded['content'] = base64.b64decode(encoded['content'])
         envelope = Envelope()
         envelope.__dict__.update(encoded)
-        peer = envelope.pop('peer')
+        peer = envelope.__dict__.pop('peer')
         return envelope, peer
