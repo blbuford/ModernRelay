@@ -4,7 +4,7 @@ from distutils.core import setup
 setup(
     name='modern-relay',
     packages=[],
-    version='0.1.0',
+    version='0.0.1',
     description='An asynchronous SMTP relay with selectable delivery agents',
     author='Brett Buford',
     license='MIT',
