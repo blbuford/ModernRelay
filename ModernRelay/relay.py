@@ -157,6 +157,7 @@ async def send_mail_from_disk(file_path: Path, file_manager: FileManager, schedu
             f"Success! {file_path} sent with agent {session.mr_agent.__class__.__name__} to {envelope.rcpt_tos}")
         scheduler.remove_job(file_path.name)
         file_path.unlink()
+        return True
     else:
         logger.warning(f"{file_path} failed to send with agent {session.mr_agent.__class__.__name__}")
     return False

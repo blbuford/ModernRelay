@@ -1,9 +1,11 @@
 import asyncio
 import ipaddress
+from pathlib import Path
 
 import pytest
 from aiosmtpd.smtp import Session
-from asynctest import MagicMock
+from apscheduler.schedulers.base import BaseScheduler
+from asynctest import MagicMock, CoroutineMock
 
 import ModernRelay.relay
 from ModernRelay.agents import DeliveryAgentBase
@@ -198,3 +200,53 @@ class TestRelay:
         assert result == "500 Delivery agent failed"
         assert spooled_files
         assert len(spooled_files) == 1
+
+    @pytest.mark.asyncio
+    async def test_data_with_attachment_failure_save_file_failure(self, relay, session_anon, caplog,
+                                                                  envelope_attachment, mocked_agent):
+        session_anon.mr_agent = mocked_agent(False)
+        relay.file_manager = MagicMock()
+        relay.file_manager.save_file = CoroutineMock()
+        relay.file_manager.save_file.return_value = None
+
+        result = await relay.handle_DATA(None, session_anon, envelope_attachment)
+
+        assert result == "500 Delivery agent failed"
+        assert "Unable to save email to disk!" in caplog.text
+
+    @pytest.mark.asyncio
+    async def test_send_mail_from_disk_success(self, envelope_peer_spooled):
+        file_path = MagicMock(Path)
+        file_manager = MagicMock(FileManager)
+        file_manager.open_file = CoroutineMock()
+        file_manager.open_file.return_value = envelope_peer_spooled
+        scheduler = MagicMock(BaseScheduler)
+        scheduler.remove_job = MagicMock()
+        session = MagicMock(Session)
+        session.mr_agent = MagicMock()
+        session.mr_agent.send_mail = CoroutineMock()
+        session.mr_agent.send_mail.return_value = True
+
+        result = await ModernRelay.relay.send_mail_from_disk(file_path, file_manager, scheduler, session)
+
+        assert result
+        scheduler.remove_job.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_mail_from_disk_failure(self, envelope_peer_spooled):
+        file_path = MagicMock(Path)
+        file_manager = MagicMock(FileManager)
+        file_manager.open_file = CoroutineMock()
+        file_manager.open_file.return_value = envelope_peer_spooled
+        scheduler = MagicMock(BaseScheduler)
+        scheduler.remove_job = MagicMock()
+        session = MagicMock(Session)
+        session.mr_agent = MagicMock()
+        session.mr_agent.send_mail = CoroutineMock()
+        session.mr_agent.send_mail.return_value = False
+
+        result = await ModernRelay.relay.send_mail_from_disk(file_path, file_manager, scheduler, session)
+
+        assert result is False
+        scheduler.remove_job.assert_not_called()
+
