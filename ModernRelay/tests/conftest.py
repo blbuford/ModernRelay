@@ -223,8 +223,16 @@ def file_manager():
 
 @pytest.fixture
 def spooled_file():
-    return Path(__file__).parent / "0996e1eb-0591-4d3f-aa26-676ebb097b90"
+    return Path(__file__).parent / "good-spooled-email"
 
+
+@pytest.fixture
+def spooled_file_bad_peer():
+    return Path(__file__).parent / "bad-spooled-email-no-peer"
+
+@pytest.fixture
+def spooled_file_bad_b64():
+    return Path(__file__).parent / "bad-spooled-email-decode-error"
 
 @pytest.fixture
 async def envelope_peer_spooled(file_manager, spooled_file):

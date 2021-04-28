@@ -47,17 +47,29 @@ class FileManager:
 
         return file_path
 
-    async def open_file(self, file_path) -> Tuple[Envelope, str]:
-        async with aiofiles.open(file_path, mode='rb') as file:
-            content = await file.read()
+    async def open_file(self, file_path) -> Union[None, Tuple[Envelope, str]]:
+        try:
+            async with aiofiles.open(file_path, mode='rb') as file:
+                content = await file.read()
+        except OSError:
+            self.logger.exception(f'Error in FileManager.open_file() while opening/reading at {file_path}')
+            return None
 
         if self.encrypt:
             pass
 
-        encoded = json.loads(base64.b64decode(content).decode('ascii'))
-        encoded['original_content'] = base64.b64decode(encoded['original_content'])
-        encoded['content'] = base64.b64decode(encoded['content'])
-        envelope = Envelope()
-        envelope.__dict__.update(encoded)
-        peer = envelope.__dict__.pop('peer')
+        try:
+            encoded = json.loads(base64.b64decode(content).decode('ascii'))
+            encoded['original_content'] = base64.b64decode(encoded['original_content'])
+            encoded['content'] = base64.b64decode(encoded['content'])
+            envelope = Envelope()
+            envelope.__dict__.update(encoded)
+            peer = envelope.__dict__.pop('peer')
+        except KeyError:
+            self.logger.exception('Error in FileManager.open_file() while accessing JSON keys')
+            return None
+        except ValueError:
+            self.logger.exception('Error in FileManager.open_file() while decoding the envelope and peer')
+            return None
+
         return envelope, peer
