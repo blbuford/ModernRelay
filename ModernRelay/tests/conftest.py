@@ -15,6 +15,7 @@ from aiosmtpd.handlers import Sink
 from pathlib import Path
 
 from aiosmtpd.smtp import Envelope
+from asynctest import mock
 
 from ModernRelay.auth import Authenticator
 import aiofiles
@@ -213,13 +214,6 @@ def envelope():
 
 
 @pytest.fixture
-def envelope_attachment(envelope):
-    with open(Path(__file__).parent / 'test_email', 'rb') as email:
-        envelope.original_content = email.read()
-    return envelope
-
-
-@pytest.fixture
 def file_manager():
     def inner(encrypted):
         return FileManager(encrypted)
@@ -236,3 +230,22 @@ def spooled_file():
 async def envelope_peer_spooled(file_manager, spooled_file):
     fm = file_manager(encrypted=False)
     return await fm.open_file(spooled_file)
+
+
+@pytest.fixture
+def envelope_attachment(envelope_peer_spooled):
+    envelope, _ = envelope_peer_spooled
+    return envelope
+
+
+@pytest.fixture
+def mock_aiofiles_oserror():
+    aiofiles.threadpool.wrap.register(mock.MagicMock)(
+        lambda *args, **kwargs: aiofiles.threadpool.AsyncBufferedIOBase(*args, **kwargs))
+    mock_file = mock.CoroutineMock()
+
+    mock_file.__aenter__ = mock.CoroutineMock()
+    mock_file.__aenter__.side_effect = OSError
+    mock_file.__aexit__ = mock.CoroutineMock()
+
+    return mock_file

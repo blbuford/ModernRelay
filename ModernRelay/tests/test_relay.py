@@ -2,11 +2,12 @@ import asyncio
 import ipaddress
 
 import pytest
-from aiosmtpd.smtp import Session, Envelope
+from aiosmtpd.smtp import Session
 from asynctest import MagicMock
-from pathlib import Path
+
 import ModernRelay.relay
 from ModernRelay.agents import DeliveryAgentBase
+from ModernRelay.file_manager import FileManager
 
 
 class TestRelay:
@@ -55,6 +56,22 @@ class TestRelay:
             }
         }
         return ModernRelay.relay.ModernRelay(peer_map)
+
+    @pytest.fixture
+    def relay_with_file_manager(self, mocked_agent):
+        peer_map = {
+            ipaddress.ip_network('172.16.128.0/24'): {
+                'authenticated': False,
+                'agent': mocked_agent(),
+                'destinations': 'all'
+            },
+            ipaddress.ip_network('172.16.129.0/24'): {
+                'authenticated': True,
+                'agent': mocked_agent(),
+                'destinations': ['example.com', 'google.com']
+            }
+        }
+        return ModernRelay.relay.ModernRelay(peer_map, FileManager(False))
 
     @pytest.mark.asyncio
     async def test_ehlo(self, relay, session_anon, envelope):
@@ -169,3 +186,15 @@ class TestRelay:
         result = await relay.handle_DATA(None, session_anon, envelope_attachment)
 
         assert result == "500 Delivery agent failed"
+
+    @pytest.mark.asyncio
+    async def test_data_with_attachment_schedule_after_failure(self, relay_with_file_manager, session_anon,
+                                                               envelope_attachment, mocked_agent, cleanup_files):
+        session_anon.mr_agent = mocked_agent(False)
+
+        result = await relay_with_file_manager.handle_DATA(None, session_anon, envelope_attachment)
+        spooled_files = relay_with_file_manager.file_manager.get_files()
+
+        assert result == "500 Delivery agent failed"
+        assert spooled_files
+        assert len(spooled_files) == 1

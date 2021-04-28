@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import uuid
 from pathlib import Path
 from typing import Union, List, Tuple
@@ -12,6 +13,7 @@ class FileManager:
     def __init__(self, encrypt):
         self.encrypt = encrypt
         self.folder = Path(__file__).parent.parent / "spool"
+        self.logger = logging.getLogger('ModernRelay.log')
 
         self.folder.mkdir(parents=True, exist_ok=True)
 
@@ -22,18 +24,27 @@ class FileManager:
         file_name = uuid.uuid4()
         file_path = self.folder / str(file_name)
 
-        j = {}
-        j.update(envelope.__dict__)
-        j['original_content'] = base64.b64encode(envelope.original_content).decode('ascii')
-        j['content'] = base64.b64encode(envelope.content).decode('ascii')
-        j['peer'] = peer
-        encoded = base64.b64encode(json.dumps(j).encode('ascii'))
+        try:
+            j = {}
+            j.update(envelope.__dict__)
+            j['original_content'] = base64.b64encode(envelope.original_content).decode('ascii')
+            j['content'] = base64.b64encode(envelope.content).decode('ascii')
+            j['peer'] = peer
+            encoded = base64.b64encode(json.dumps(j).encode('ascii'))
+        except TypeError:
+            self.logger.exception('Error in FileManager.save_file() while encoding the envelope and peer')
+            return None
 
         if self.encrypt:
             pass
 
-        async with aiofiles.open(file_path, mode='wb') as file:
-            await file.write(encoded)
+        try:
+            async with aiofiles.open(file_path, mode='wb') as file:
+                await file.write(encoded)
+        except OSError:
+            self.logger.exception(f'Error in FileManager.save_file() while opening/writing at {file_path}')
+            return None
+
         return file_path
 
     async def open_file(self, file_path) -> Tuple[Envelope, str]:
