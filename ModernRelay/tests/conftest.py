@@ -15,7 +15,8 @@ from aiosmtpd.handlers import Sink
 from pathlib import Path
 
 from aiosmtpd.smtp import Envelope
-from asynctest import mock
+from apscheduler.schedulers.base import BaseScheduler
+from asynctest import mock, MagicMock, CoroutineMock
 
 from ModernRelay.auth import Authenticator
 import aiofiles
@@ -222,17 +223,29 @@ def file_manager():
 
 
 @pytest.fixture
+def spool():
+    return Path(__file__).parent.parent.parent / 'spool'
+
+
+@pytest.fixture
 def spooled_file():
-    return Path(__file__).parent / "good-spooled-email"
+    return Path(__file__).parent / 'test_files' / "good-spooled-email-172-16-128-109"
+
+
+@pytest.fixture
+def spooled_file_peer_130():
+    return Path(__file__).parent / 'test_files' / "good-spooled-email-172-16-130-109"
 
 
 @pytest.fixture
 def spooled_file_bad_peer():
-    return Path(__file__).parent / "bad-spooled-email-no-peer"
+    return Path(__file__).parent / 'test_files' / "bad-spooled-email-no-peer"
+
 
 @pytest.fixture
 def spooled_file_bad_b64():
-    return Path(__file__).parent / "bad-spooled-email-decode-error"
+    return Path(__file__).parent / 'test_files' / "bad-spooled-email-decode-error"
+
 
 @pytest.fixture
 async def envelope_peer_spooled(file_manager, spooled_file):
@@ -257,3 +270,29 @@ def mock_aiofiles_oserror():
     mock_file.__aexit__ = mock.CoroutineMock()
 
     return mock_file
+
+
+@pytest.fixture
+def mock_file_path():
+    return MagicMock(Path)
+
+
+@pytest.fixture
+def mock_file_manager(envelope_peer_spooled, mock_file_path):
+    file_manager = MagicMock(FileManager)
+    file_manager.open_file = CoroutineMock()
+    file_manager.open_file.return_value = envelope_peer_spooled
+    file_manager.save_file = CoroutineMock()
+    file_manager.save_file.return_value = mock_file_path
+    file_manager._file_path = mock_file_path
+
+    return file_manager
+
+
+@pytest.fixture
+def mock_scheduler():
+    scheduler = MagicMock(BaseScheduler)
+    scheduler.remove_job = MagicMock()
+    scheduler.add_job = MagicMock()
+
+    return scheduler

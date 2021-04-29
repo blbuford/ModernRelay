@@ -166,7 +166,12 @@ async def send_mail_from_disk(file_path: Path, file_manager: FileManager, schedu
 async def load_old_jobs(file_manager, peer_map, scheduler):
     logger = logging.getLogger("ModernRelay.log")
     for job_file in file_manager.get_files():
-        envelope, peer = await file_manager.open_file(job_file)
+        result = await file_manager.open_file(job_file)
+        if result:
+            envelope, peer = result
+        else:
+            logger.warning(f"Job file({job_file}) could not be loaded as it is probably misformatted!")
+            continue
         session = Session(loop=asyncio.get_event_loop())
         session.authenticated = True
         session.peer = (peer,)

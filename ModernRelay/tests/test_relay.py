@@ -2,6 +2,7 @@ import asyncio
 import ipaddress
 from pathlib import Path
 
+import aiofiles
 import pytest
 from aiosmtpd.smtp import Session
 from apscheduler.schedulers.base import BaseScheduler
@@ -44,35 +45,30 @@ class TestRelay:
         return inner
 
     @pytest.fixture
-    def relay(self, mocked_agent):
-        peer_map = {
-            ipaddress.ip_network('172.16.128.0/24'): {
-                'authenticated': False,
-                'agent': mocked_agent(),
-                'destinations': 'all'
-            },
-            ipaddress.ip_network('172.16.129.0/24'): {
-                'authenticated': True,
-                'agent': mocked_agent(),
-                'destinations': ['example.com', 'google.com']
+    def peer_map(self):
+        def inner(agent):
+            peer_map = {
+                ipaddress.ip_network('172.16.128.0/24'): {
+                    'authenticated': False,
+                    'agent': agent,
+                    'destinations': 'all'
+                },
+                ipaddress.ip_network('172.16.129.0/24'): {
+                    'authenticated': True,
+                    'agent': agent,
+                    'destinations': ['example.com', 'google.com']
+                }
             }
-        }
-        return ModernRelay.relay.ModernRelay(peer_map)
+            return peer_map
+
+        return inner
 
     @pytest.fixture
-    def relay_with_file_manager(self, mocked_agent):
-        peer_map = {
-            ipaddress.ip_network('172.16.128.0/24'): {
-                'authenticated': False,
-                'agent': mocked_agent(),
-                'destinations': 'all'
-            },
-            ipaddress.ip_network('172.16.129.0/24'): {
-                'authenticated': True,
-                'agent': mocked_agent(),
-                'destinations': ['example.com', 'google.com']
-            }
-        }
+    def relay(self, mocked_agent, peer_map):
+        return ModernRelay.relay.ModernRelay(peer_map(mocked_agent()))
+
+    @pytest.fixture
+    def relay_with_file_manager(self, mocked_agent, peer_map):
         return ModernRelay.relay.ModernRelay(peer_map, FileManager(False))
 
     @pytest.mark.asyncio
@@ -233,20 +229,55 @@ class TestRelay:
         scheduler.remove_job.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_send_mail_from_disk_failure(self, envelope_peer_spooled):
-        file_path = MagicMock(Path)
-        file_manager = MagicMock(FileManager)
-        file_manager.open_file = CoroutineMock()
-        file_manager.open_file.return_value = envelope_peer_spooled
-        scheduler = MagicMock(BaseScheduler)
-        scheduler.remove_job = MagicMock()
+    async def test_send_mail_from_disk_failure(self, envelope_peer_spooled, mock_file_manager, mock_scheduler):
         session = MagicMock(Session)
         session.mr_agent = MagicMock()
         session.mr_agent.send_mail = CoroutineMock()
         session.mr_agent.send_mail.return_value = False
 
-        result = await ModernRelay.relay.send_mail_from_disk(file_path, file_manager, scheduler, session)
+        result = await ModernRelay.relay.send_mail_from_disk(mock_file_manager._file_path,
+                                                             mock_file_manager,
+                                                             mock_scheduler,
+                                                             session)
 
         assert result is False
-        scheduler.remove_job.assert_not_called()
+        mock_scheduler.remove_job.assert_not_called()
 
+    @pytest.mark.asyncio
+    async def test_load_old_jobs_success(self, file_manager, mock_scheduler, peer_map, mocked_agent,
+                                         spool, spooled_file, cleanup_files):
+        async with aiofiles.open(spooled_file, 'rb') as src, \
+                aiofiles.open(spool / spooled_file.name, 'wb') as dst:
+            await dst.write(await src.read())
+        map = peer_map(mocked_agent())
+        fm = file_manager(False)
+
+        await ModernRelay.relay.load_old_jobs(fm, map, mock_scheduler)
+
+        mock_scheduler.add_job.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_load_old_jobs_fail_bad_file(self, file_manager, mock_scheduler, peer_map, mocked_agent,
+                                               spool, spooled_file_bad_peer, cleanup_files):
+        async with aiofiles.open(spooled_file_bad_peer, 'rb') as src, \
+                aiofiles.open(spool / spooled_file_bad_peer.name, 'wb') as dst:
+            await dst.write(await src.read())
+        map = peer_map(mocked_agent())
+        fm = file_manager(False)
+
+        await ModernRelay.relay.load_old_jobs(fm, map, mock_scheduler)
+
+        mock_scheduler.add_job.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_load_old_jobs_fail_peer_not_in_map(self, file_manager, mock_scheduler, peer_map, mocked_agent,
+                                                      spool, spooled_file_peer_130, cleanup_files):
+        async with aiofiles.open(spooled_file_peer_130, 'rb') as src, \
+                aiofiles.open(spool / spooled_file_peer_130.name, 'wb') as dst:
+            await dst.write(await src.read())
+        map = peer_map(mocked_agent())
+        fm = file_manager(False)
+
+        await ModernRelay.relay.load_old_jobs(fm, map, mock_scheduler)
+
+        mock_scheduler.add_job.assert_not_called()
