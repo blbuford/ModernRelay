@@ -8,14 +8,14 @@ from aiosmtpd.controller import Controller
 from dotenv import load_dotenv
 
 import agents
-import exceptions
+from ModernRelay import exceptions
 from ModernRelay.common import get_logger, parse_config
 from ModernRelay.file_manager import FileManager
 from auth import Authenticator
 from relay import ModernRelay
 
 
-async def main(config, peers):
+async def amain(config, peers):
     logger = logging.getLogger("ModernRelay.log")
     try:
         for addr in peers:
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     server_conf, peers = parse_config(conf)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(main(server_conf, peers))
+    loop.create_task(amain(server_conf, peers))
     try:
         loop.run_forever()
     except KeyboardInterrupt:
