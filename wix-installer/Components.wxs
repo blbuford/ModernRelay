@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+    <Fragment>
+
+        <!-- Product Components -->
+        <ComponentGroup Id="ProductComponents">
+
+
+        </ComponentGroup>
+
+        <!-- Installed files -->
+        <DirectoryRef Id="INSTALLFOLDER"
+                      FileSource="..\ModernRelay\dist\modern_relay\">
+        </DirectoryRef>
+
+    </Fragment>
+
+</Wix>

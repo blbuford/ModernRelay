@@ -1,0 +1,3 @@
+"%WIX%bin\light" -b ".\dist\modern_relay" -ext WixUIExtension -cultures:en-us -loc wix-installer\Localization.wsl wix-installer\obj\*.wixobj -o wix-installer\bin\Installer.msi
+"%WIX%bin\heat" dir ".\dist\modern_relay" -gg -sfrag -cg PublishedComponents -template fragment -o ".\wix-installer\Files.wxs"
+"%WIX%bin\candle" wix-installer\*.wxs -o wix-installer\obj\
