@@ -5,13 +5,14 @@
 
         <!-- Product Components -->
         <ComponentGroup Id="ProductComponents">
-
-
+            <ComponentRef Id="InstallProgramFiles64Folder" />
         </ComponentGroup>
 
         <!-- Installed files -->
-        <DirectoryRef Id="INSTALLFOLDER"
-                      FileSource="..\ModernRelay\dist\modern_relay\">
+        <DirectoryRef Id="INSTALLFOLDER" FileSource="..\ModernRelay\dist\modern_relay\">
+            <Component Id="InstallProgramFiles64Folder" Guid="{0995664D-AE63-4DD6-B894-708A99611370}" Win64="yes">
+                <RemoveFolder Id="RemoveFiles" Directory="INSTALLFOLDER" On="uninstall"/>
+            </Component>
         </DirectoryRef>
 
     </Fragment>
