@@ -7,6 +7,8 @@
     <!-- Fixed upgrade Id -->
     <?define UpgradeCode = "{8C197FE6-57DF-41FD-A0CD-84B5D3B97BDC}" ?>
 
+    <?define ProjectDir = "C:\Users\Brett\PycharmProjects\ModernRelay" ?>
+
     <!-- Define main product -->
     <Product Id="$(var.ProductCode)"
              Name="!(loc.ProductName)"
@@ -47,8 +49,8 @@
         <UIRef Id="WixUI_Minimal"/>
 
         <!-- Change the installer UI background images -->
-        <!-- <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\Assets\License.rtf"/>
-        <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Background.bmp"/>
+        <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\wix-installer\assets\License.rtf"/>
+        <!--<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Background.bmp"/>
         <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\Assets\Banner.bmp"/> -->
 
         <!-- Define components, shortcuts, files etc... for installer -->
