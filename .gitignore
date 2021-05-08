@@ -155,3 +155,6 @@ Thumbs.db
 
 .idea
 *.env
+
+wix-installer/bin
+wix-installer/obj

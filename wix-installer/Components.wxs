@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
     <Fragment>
 
         <!-- Product Components -->
         <ComponentGroup Id="ProductComponents">
-            <ComponentRef Id="InstallProgramFiles64Folder" />
+            <ComponentRef Id="InstallProgramFiles64Folder"/>
+            <ComponentRef Id="ProgramDataDir"/>
+            <ComponentRef Id="SetupLogs"/>
+            <ComponentRef Id="SetupSpool"/>
+            <ComponentRef Id="NSSM"/>
         </ComponentGroup>
 
         <!-- Installed files -->
@@ -13,8 +18,52 @@
             <Component Id="InstallProgramFiles64Folder" Guid="{0995664D-AE63-4DD6-B894-708A99611370}" Win64="yes">
                 <RemoveFolder Id="RemoveFiles" Directory="INSTALLFOLDER" On="uninstall"/>
             </Component>
+            <Component Id="NSSM" Guid="{0ec19efc-9304-4b95-8adb-681b26e784ba}">
+                <File Id="NSSM" Name="nssm.exe" Source="SourceDir\nssm.exe"/>
+                <ServiceInstall Id="ModernRelaySvc" Name="ModernRelay" DisplayName="Modern Relay" Type="ownProcess" Start="auto"
+                                ErrorControl="normal" Account="NT SERVICE\ModernRelay"/>
+                <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\ModernRelay\Parameters">
+                    <RegistryValue Name="AppDirectory" Value="[INSTALLFOLDER]" Type="expandable"/>
+                    <RegistryValue Name="Application" Value="[INSTALLFOLDER]modern_relay.exe" Type="expandable"/>
+                    <RegistryValue Name="AppParameters" Value="" Type="expandable"/>
+                    <RegistryValue Name="AppStderr" Value="[LogsFolder]stderr.log" Type="expandable"/>
+                    <RegistryValue Name="AppStdout" Value="[LogsFolder]stderr.log" Type="expandable"/>
+                    <RegistryValue Name="AppEnvironmentExtra" Type="multiString">
+                        <MultiStringValue Name="EnvironmentVars" Action="append" Type="multiString">MR_MS365_APP_ID=[MS365APPID]</MultiStringValue>
+                        <MultiStringValue Name="EnvironmentVars" Action="append" Type="multiString">MR_MS365_APP_SECRET=[MS365APPSECRET]</MultiStringValue>
+                        <MultiStringValue Name="EnvironmentVars" Action="append" Type="multiString">MR_MS365_TENANT_ID=[MS365TENANTID]</MultiStringValue>
+                    </RegistryValue>
+                    <RegistryKey Key="AppExit">
+                        <RegistryValue Value="Restart" Type="string"/>
+                    </RegistryKey>
+                </RegistryKey>
+                <ServiceControl Id="ModernRelaySvc" Name="ModernRelay" Start="install" Stop="both"/>
+            </Component>
         </DirectoryRef>
+        <DirectoryRef Id="MyAppDataFolder">
+            <Component Id="ProgramDataDir" Guid="0e2e54b2-8448-4195-869c-a161b7f8acac">
 
+                <CreateFolder>
+                    <util:PermissionEx User="NT Service\ModernRelay" GenericAll="yes" ChangePermission="no"/>
+                </CreateFolder>
+                <RemoveFolder Id='MyAppDataFolder' On='uninstall' />
+            </Component>
+        </DirectoryRef>
+        <DirectoryRef Id="LogsFolder">
+            <Component Id="SetupLogs" Guid="8391a723-6950-4031-9d5d-8b616d8fcdfe">
+                <File Id="ModernRelayLog" Source="SourceDir\ModernRelay.log" />
+                <File Id="ModernRelayStdOut" Source="SourceDir\stdout.log" />
+                <File Id="ModernRelayStdErr" Source="SourceDir\stderr.log" />
+                <CreateFolder/>
+                <RemoveFolder Id='LogsFolder' On='uninstall' />
+            </Component>
+        </DirectoryRef>
+        <DirectoryRef Id="SpoolFolder">
+            <Component Id="SetupSpool" Guid="61cd9398-f39f-4258-8c89-8ac3d5a6d8ea">
+                <CreateFolder/>
+                <RemoveFolder Id='SpoolFolder' On='uninstall' />
+            </Component>
+        </DirectoryRef>
     </Fragment>
 
 </Wix>

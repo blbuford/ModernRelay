@@ -46,7 +46,17 @@
         <Property Id="ARPURLINFOABOUT">https://github.com/blbuford</Property>
 
         <!-- Create a basic UI for the installer -->
-        <UIRef Id="WixUI_Minimal"/>
+        <UI Id="MyWixUI_Mondo">
+            <UIRef Id="WixUI_Mondo"/>
+            <UIRef Id="WixUI_ErrorProgressText"/>
+
+            <DialogRef Id="MS365Dlg"/>
+
+            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="MS365Dlg"
+                     Order="3">LicenseAccepted = "1"
+            </Publish>
+            <Publish Dialog="SetupTypeDlg" Control="Back" Event="NewDialog" Value="MS365Dlg">1</Publish>
+        </UI>
 
         <!-- Change the installer UI background images -->
         <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\wix-installer\assets\License.rtf"/>
