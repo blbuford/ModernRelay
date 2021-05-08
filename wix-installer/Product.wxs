@@ -44,7 +44,9 @@
         <!-- <Property Id="ARPPRODUCTICON">icon.ico</Property> -->
         <!-- Help/Support website (shows in the Add/Remove programs) -->
         <Property Id="ARPURLINFOABOUT">https://github.com/blbuford</Property>
-
+        <Property Id="MS365APPID" Secure="yes"/>
+        <Property Id="MS365APPSECRET" Secure="yes"/>
+        <Property Id="MS365TENANTID" Secure="yes"/>
         <!-- Create a basic UI for the installer -->
         <UI Id="MyWixUI_Mondo">
             <UIRef Id="WixUI_Mondo"/>
