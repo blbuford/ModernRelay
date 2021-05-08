@@ -32,7 +32,7 @@ async def amain(config, peers):
         if 'required' in config['tls']:
             tls_required = config['tls']['required']
 
-        handler = ModernRelay(peers, FileManager(False))
+        handler = ModernRelay(peers, FileManager(False, config['files']['spool_dir']))
         controller = Controller(
             handler,
             authenticator=Authenticator('modernrelay.db'),

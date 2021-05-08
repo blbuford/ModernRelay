@@ -2,7 +2,7 @@
 logging:
   log_level: DEBUG
   log_file_name: ModernRelay.log
-  log_file_dir: %ProgramData%/ModernRelay/
+  log_file_dir: %ProgramData%/ModernRelay/logs/
 
 tls:
   required: yes
@@ -12,6 +12,9 @@ tls:
 networking:
   port: 8025
   host_name: 172.16.128.109
+
+files:
+  spool_dir: %ProgramData%/ModernRelay/spool/
 
 peers:
   172.16.128.109/32:

@@ -8,11 +8,16 @@ from typing import Union, List, Tuple
 import aiofiles
 from aiosmtpd.smtp import Envelope
 
+from ModernRelay.common import resolve_env_vars
+
 
 class FileManager:
-    def __init__(self, encrypt):
+    def __init__(self, encrypt, spool_dir=None):
         self.encrypt = encrypt
-        self.folder = Path(__file__).parent.parent / "spool"
+        if spool_dir:
+            self.folder = Path(resolve_env_vars(spool_dir))
+        else:
+            self.folder = Path(__file__).parent.parent / "spool"
         self.logger = logging.getLogger('ModernRelay.log')
 
         self.folder.mkdir(parents=True, exist_ok=True)

@@ -12,6 +12,23 @@ from ModernRelay.exceptions import ConfigParsingException
 FORMATTER = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 
+def resolve_env_vars(unresolved):
+    plat = platform.system().lower()
+
+    if plat == "windows":
+        env_vars_regex = re.compile(r"%(.+)%")
+        matches = env_vars_regex.findall(unresolved)
+        for match in matches:
+            unresolved = unresolved.replace("%" + match + "%", os.getenv(match))
+    else:
+        env_vars_regex = re.compile(r"\$(.+)/?}")
+        matches = env_vars_regex.findall(unresolved)
+        for match in matches:
+            unresolved = unresolved.replace("$" + match, os.getenv(match))
+
+    return unresolved
+
+
 def get_console_handler():
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(FORMATTER)
@@ -19,18 +36,7 @@ def get_console_handler():
 
 
 def get_file_handler(filename):
-    plat = platform.system().lower()
-
-    if plat == "windows":
-        env_vars_regex = re.compile(r"%(.+)%")
-        matches = env_vars_regex.findall(filename)
-        for match in matches:
-            filename = filename.replace("%" + match + "%", os.getenv(match))
-    else:
-        env_vars_regex = re.compile(r"\$(.+)/?}")
-        matches = env_vars_regex.findall(filename)
-        for match in matches:
-            filename = filename.replace("$" + match, os.getenv(match))
+    filename = resolve_env_vars(filename)
     file_handler = TimedRotatingFileHandler(filename, when='midnight', backupCount=5)
     file_handler.setFormatter(FORMATTER)
     return file_handler
@@ -84,6 +90,7 @@ def parse_config(config):
 
     server_conf['tls'] = {}
     server_conf['networking'] = {}
+    server_conf['files'] = {}
     if 'tls' in config:
         server_conf['tls']['required'] = config['tls']['required'].get(bool)
         server_conf['tls']['public_key'] = Path(config['tls']['public_key'].get(str)).absolute()
@@ -92,5 +99,8 @@ def parse_config(config):
     if 'networking' in config:
         server_conf['networking']['port'] = config['networking']['port'].get(int)
         server_conf['networking']['host_name'] = config['networking']['host_name'].get(str)
+
+    if 'files' in config:
+        server_conf['files']['spool_dir'] = config['files']['spool_dir'].get(str)
 
     return server_conf, peers
