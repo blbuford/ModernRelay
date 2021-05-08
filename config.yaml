@@ -2,6 +2,7 @@
 logging:
   log_level: DEBUG
   log_file_name: ModernRelay.log
+  log_file_dir: %ProgramData%/ModernRelay/
 
 tls:
   required: yes

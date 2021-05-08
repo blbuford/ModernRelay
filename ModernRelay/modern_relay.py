@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import ssl
+from pathlib import Path
 
 import confuse
 from aiosmtpd.controller import Controller
@@ -50,10 +51,13 @@ if __name__ == "__main__":
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(BASEDIR, 'dev.env'))
     conf = confuse.Configuration("ModernRelay", __name__)
+    conf.set_file("./config.yaml")
 
     log_level = conf['logging']['log_level'].get()
     log_file_name = conf['logging']['log_file_name'].get()
-    get_logger("ModernRelay.log", getattr(logging, log_level), log_file_name)
+    log_file_dir = conf['logging']['log_file_dir'].get()
+    log_file = os.path.join(log_file_dir, log_file_name)
+    get_logger("ModernRelay.log", getattr(logging, log_level), log_file)
 
     server_conf, peers = parse_config(conf)
 

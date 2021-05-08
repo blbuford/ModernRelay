@@ -1,6 +1,9 @@
 import ipaddress
 import logging
+import os
 import sys
+import platform
+import re
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
@@ -16,6 +19,18 @@ def get_console_handler():
 
 
 def get_file_handler(filename):
+    plat = platform.system().lower()
+
+    if plat == "windows":
+        env_vars_regex = re.compile(r"%(.+)%")
+        matches = env_vars_regex.findall(filename)
+        for match in matches:
+            filename = filename.replace("%" + match + "%", os.getenv(match))
+    else:
+        env_vars_regex = re.compile(r"\$(.+)/?}")
+        matches = env_vars_regex.findall(filename)
+        for match in matches:
+            filename = filename.replace("$" + match, os.getenv(match))
     file_handler = TimedRotatingFileHandler(filename, when='midnight', backupCount=5)
     file_handler.setFormatter(FORMATTER)
     return file_handler
