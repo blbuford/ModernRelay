@@ -36,8 +36,8 @@ async def amain(config, peers):
         controller = Controller(
             handler,
             authenticator=Authenticator('modernrelay.db'),
-            port=8025,
-            hostname='172.16.128.109',
+            port=config['networking']['port'],
+            hostname=config['networking']['host_name'],
             require_starttls=tls_required,
             tls_context=tls_context)
         controller.start()
