@@ -45,7 +45,8 @@ def get_file_handler(filename):
 def get_logger(logger_name, level=logging.DEBUG, filename="ModernRelay.log"):
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
-    logger.addHandler(get_console_handler())
+    if level < logging.INFO:
+        logger.addHandler(get_console_handler())
     logger.addHandler(get_file_handler(filename))
     logger.propagate = False
     return logger

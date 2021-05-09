@@ -68,7 +68,7 @@ class GraphDeliveryAgent(DeliveryAgentBase):
             ret = 200 <= resp[-1] < 300
             self.logger.debug(f"GraphDeliveryAgent:send_mail: HTTP Response: {resp[-1]}, HTTP Status:{resp[0]}")
         except GraphClientException as ex:
-            self.logger.warning(f"Error: sendmail failed. {ex.message}")
+            self.logger.exception(f"Error: sendmail failed. {ex.message}")
         except Exception as ex:
-            self.logger.warning(f"Error: sendmail failed at authentication. {ex.args[0]}")
+            self.logger.exception(f"Error: sendmail failed at authentication. {ex.args[0]}")
         return ret
