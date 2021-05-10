@@ -2,21 +2,27 @@ import asyncio
 import logging
 import os
 import ssl
-from pathlib import Path
 
 import confuse
 from aiosmtpd.controller import Controller
 from dotenv import load_dotenv
 
-import agents
+from ModernRelay import agents
 from ModernRelay import exceptions
 from ModernRelay.common import get_logger, parse_config
 from ModernRelay.file_manager import FileManager
-from auth import Authenticator
-from relay import ModernRelay
+from ModernRelay.auth import Authenticator
+from ModernRelay.relay import ModernRelay
 
 
 async def amain(config, peers):
+    """
+    Async main entry point. It initializes all configuration items, feeds them into the aiosmtpd controller,
+    and starts it.
+    :param config: Non-peer configuration
+    :param peers: Maps peers to their agents, allowed destinations, and authentication schemes.
+    :return:
+    """
     logger = logging.getLogger("ModernRelay.log")
     try:
         for addr in peers:
