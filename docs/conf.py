@@ -22,7 +22,7 @@ copyright = '2021, Brett Buford'
 author = 'Brett Buford'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = ModernRelay.__version__
 
 
 # -- General configuration ---------------------------------------------------
