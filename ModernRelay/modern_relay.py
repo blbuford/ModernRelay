@@ -19,6 +19,7 @@ async def amain(config, peers):
     """
     Async main entry point. It initializes all configuration items, feeds them into the aiosmtpd controller,
     and starts it.
+
     :param config: Non-peer configuration
     :param peers: Maps peers to their agents, allowed destinations, and authentication schemes.
     :return:
