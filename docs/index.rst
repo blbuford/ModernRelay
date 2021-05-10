@@ -20,7 +20,9 @@ adding another SPF address to your record.
    :maxdepth: 2
    :caption: Contents:
 
-   readme
+   installation
+   usage
+   development
 
 
 Indices and tables
