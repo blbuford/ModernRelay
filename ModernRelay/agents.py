@@ -9,6 +9,11 @@ from ModernRelay import exceptions
 
 
 class DeliveryAgentBase(ABC):
+    """
+    Abstract base class for delivery agents.
+
+    Extend this class and attach the decorator to your subclass to create a new delivery agent
+    """
     subclasses = {}
 
     def __init__(self):
