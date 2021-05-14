@@ -158,6 +158,8 @@ Thumbs.db
 
 wix-installer/bin
 wix-installer/obj
+wix-installer/Files.wxs
 
+util/
 dist/
 .tox
