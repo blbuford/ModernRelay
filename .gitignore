@@ -15,7 +15,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+ModernRelay/dist/
 downloads/
 eggs/
 .eggs/
