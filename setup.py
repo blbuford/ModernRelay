@@ -15,7 +15,7 @@ requirements = [
 setup(
     name='modern-relay',
     packages=['ModernRelay', 'ModernRelay.tests'],
-    version='0.0.2',
+    version='0.0.3',
     description='An asynchronous SMTP relay with selectable delivery agents',
     author='Brett Buford',
     license='MIT',

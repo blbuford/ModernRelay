@@ -13,7 +13,7 @@
     <Product Id="$(var.ProductCode)"
              Name="!(loc.ProductName)"
              Language="!(loc.Language)"
-             Version="0.0.2"
+             Version="0.0.3"
              Manufacturer="!(loc.Company)"
              UpgradeCode="$(var.UpgradeCode)">
 
