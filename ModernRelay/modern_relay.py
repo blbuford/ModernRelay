@@ -2,10 +2,10 @@ import asyncio
 import logging
 import os
 import ssl
+from pathlib import Path
 
 import confuse
 from aiosmtpd.controller import Controller
-from dotenv import load_dotenv
 
 from ModernRelay import agents
 from ModernRelay import exceptions
@@ -56,9 +56,14 @@ async def amain(config, peers):
 
 def main():
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
-    load_dotenv(os.path.join(BASEDIR, 'dev.env'))
+    env_path = os.path.join(BASEDIR, '../dev.env')
+    if os.path.exists(env_path):
+        from dotenv import load_dotenv
+        load_dotenv(env_path)
+
     conf = confuse.Configuration("ModernRelay", __name__)
-    conf.set_file("./config.yaml")
+    conf_path = Path(__file__).parent / "config.yaml"
+    conf.set_file(str(conf_path))
 
     log_level = conf['logging']['log_level'].get()
     log_file_name = conf['logging']['log_file_name'].get()
