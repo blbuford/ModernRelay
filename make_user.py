@@ -5,7 +5,7 @@ from typing import Dict
 
 from argon2 import PasswordHasher
 
-DB_FILE = "test.db~"
+DB_FILE = "modernrelay.db"
 USER_AND_PASSWORD: Dict[str, str] = {
     "test": "test",
     "test2": "test2"

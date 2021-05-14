@@ -60,6 +60,8 @@ You can install this package in a virtual environment like so::
 
     $ python3 -m venv /path/to/venv
     $ source /path/to/venv/bin/activate
+    $ git clone https://github.com/blbuford/ModernRelay.git
+    $ cd ModernRelay
     $ pip install -e .[dev]
 
 License
