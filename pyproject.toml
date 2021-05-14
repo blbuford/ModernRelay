@@ -15,6 +15,7 @@ requires = [
     "argon2-cffi",
     "confuse",
     "msgraph-async",
+    "python-dotenv",
 ]
 requires-python = ">=3.6"
 classifiers = [
@@ -50,7 +51,6 @@ test = [
 ]
 dev = [
     "check-manifest",
-    "python-dotenv",
 ]
 doc = [
     "sphinx",
