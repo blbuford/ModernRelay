@@ -54,7 +54,7 @@ async def amain(config, peers):
         logger.exception("Failed to create delivery agent!")
 
 
-if __name__ == "__main__":
+def main():
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(BASEDIR, 'dev.env'))
     conf = confuse.Configuration("ModernRelay", __name__)
@@ -74,3 +74,7 @@ if __name__ == "__main__":
         loop.run_forever()
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == "__main__":
+    main()
