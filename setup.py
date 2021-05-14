@@ -13,7 +13,7 @@ requirements = [
 ]
 
 setup(
-    name='modern-relay',
+    name='modernrelay',
     packages=['ModernRelay', 'ModernRelay.tests'],
     version='0.0.3',
     description='An asynchronous SMTP relay with selectable delivery agents',
