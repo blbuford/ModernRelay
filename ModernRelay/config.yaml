@@ -6,8 +6,8 @@ logging:
 
 tls:
   required: yes
-  public_key: certs/cert.pem
-  private_key: certs/key.pem
+  public_key: ModernRelay/certs/cert.pem
+  private_key: ModernRelay/certs/key.pem
 
 networking:
   port: 8025
